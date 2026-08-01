@@ -5,16 +5,17 @@
 #   brew install gqy
 #
 # 发布流程：
-#   1. git tag v0.4.0 && git push origin v0.4.0
+#   1. git tag v0.4.2 && git push origin v0.4.2
 #   2. 计算源码 tarball 的 sha256：
-#        curl -Ls https://github.com/Francis-Xavier-code/GQY/archive/refs/tags/v0.4.0.tar.gz | shasum -a 256
+#        curl -Ls https://github.com/Francis-Xavier-code/GQY/archive/refs/tags/v0.4.2.tar.gz | shasum -a 256
 #   3. 把结果填入下面 sha256 并提交本文件
-#   4. brew install gqy 验证
+#   4. 同步到 homebrew-GQY tap 仓库
+#   5. brew install gqy 验证
 class Gqy < Formula
   desc "顾清影 —— 活在终端与菜单栏里的 AI 助理"
   homepage "https://github.com/Francis-Xavier-code/GQY"
-  url "https://github.com/Francis-Xavier-code/GQY/archive/refs/tags/v0.4.0.tar.gz"
-  sha256 "20c92b4027aa911641203e725b11df6ea1d138d0ea76a7033fa6f69e83e00bd2"
+  url "https://github.com/Francis-Xavier-code/GQY/archive/refs/tags/v0.4.2.tar.gz"
+  sha256 "ebf6b700729ddaacd0a33fcd0e9a2640d8675c24503f638aaa1f1b3ad71b4a4b"
   license "GPL-3.0"
 
   depends_on "rust" => :build
@@ -23,7 +24,12 @@ class Gqy < Formula
 
   def install
     system "cargo", "install", *std_cargo_args
-    bin.install Dir[libexec/"bin/*"]
+    # 只读共享资源统一装进 $(brew --prefix)/share/gqy 一个目录：
+    # scripts（脚本工具）、memes（内置表情库）、kb（知识库源）。
+    # 运行时从可执行文件位置自动解析该目录。
+    pkgshare.install "src/scripts"
+    pkgshare.install "src/memes"
+    pkgshare.install "kb"
   end
 
   test do
