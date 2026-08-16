@@ -1,43 +1,36 @@
-# Homebrew formula: gqy (CLI)
+# Homebrew formula for GQY(顾清影 GQY 人格桌面助手)。
 #
-# 用法（发布 tag 后）：
-#   brew tap Francis-Xavier-code/GQY
-#   brew install gqy
-#
-# 发布流程：
-#   1. git tag v0.4.5 && git push origin v0.4.5
-#   2. 计算源码 tarball 的 sha256：
-#        curl -Ls https://github.com/Francis-Xavier-code/GQY/archive/refs/tags/v0.4.5.tar.gz | shasum -a 256
-#   3. 把结果填入下面 sha256 并提交本文件
-#   4. 同步到 homebrew-GQY tap 仓库
-#   5. brew install gqy 验证
-class Gqy < Formula
-  desc "顾清影 —— 活在终端与菜单栏里的 AI 助理"
-  homepage "https://github.com/Francis-Xavier-code/GQY"
-  url "https://github.com/Francis-Xavier-code/GQY/archive/refs/tags/v0.8.6.tar.gz"
-  sha256 "94a1bc6235c6ef6fb069484f20ab241ea21d29d09260d1e770b817ffb6ec65e8"
-  license "GPL-3.0"
+# 发布流程见 packaging/README.md。发布资产与字体 sha256 在打 tag 时填入;
+# 字体资源用 :no_check 占位,正式发布前应固定版本与校验和。
 
-  depends_on "rust" => :build
-  # 终端图片显示依赖 chafa；不需要图片功能时可移除
-  depends_on "chafa"
+class Gqy < Formula
+  desc "GQY: desktop AI assistant with the GQY persona"
+  homepage "https://github.com/Francis-Xavier-code/gqy"
+  license "MIT"
+
+  url "https://github.com/Francis-Xavier-code/gqy/releases/download/v0.1.0/gqy-0.1.0-aarch64-apple-darwin.tar.gz"
+  sha256 "21c8a0045245b871d9c709e13b152e35c5bd9df6ac67b061254f4b3d61a3d267"
+
+  # 长回复转图片的渲染字体(与旧 AUR 包装包一致,发布资产不含字体)。
+  # TODO(release): 固定 Noto 版本并填 sha256。
+  resource "noto-sans-cjk-sc" do
+    url "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/08_NotoSansCJKsc.zip"
+    sha256 :no_check
+  end
 
   def install
-    system "cargo", "install", *std_cargo_args
-    # 只读共享资源统一装进 $(brew --prefix)/share/gqy 一个目录：
-    # scripts（脚本工具）、memes（内置表情库）、kb（知识库源）、
-    # bridges（napcat/tg 桥接脚本，gqy napcat / gqy tg 管理）。
-    # 运行时从可执行文件位置自动解析该目录。
-    pkgshare.install "src/scripts"
-    pkgshare.install "src/memes"
-    pkgshare.install "kb"
-    pkgshare.install "communication" => "bridges"
-    # 菜单栏壳源码（gqy menubar --install 用 clang 现场编译，无需单独 cask/DMG）
-    pkgshare.install "macos/GQYMenuBar" => "menubar"
-    pkgshare.install "pics/GQY-icon.png"
+    bin.install "gqy"
+    # 字体安装到 share/gqy/fonts,渲染插件按该目录查找;
+    # 缺失时静默退化为纯文本(与旧行为一致)。
+    fonts_dir = share/"gqy/fonts"
+    resource("noto-sans-cjk-sc").stage do
+      Dir["**/*.otf", "**/*.ttf", "**/*.otc", "**/*.ttc"].each do |font|
+        (fonts_dir).install font
+      end
+    end
   end
 
   test do
-    assert_match "gqy", shell_output("#{bin}/gqy --version")
+    assert_match "gqy", shell_output("#{bin}/gqy --version 2>&1", 0)
   end
 end
