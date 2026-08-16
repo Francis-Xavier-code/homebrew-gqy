@@ -11,7 +11,7 @@ class Gqy < Formula
   # 模板约定:URL 带 v(与 CI 资产命名 gqy-<tag>-<target>.tar.gz 一致),
   # sha256 为占位符,由 CI 的 Generate Homebrew formula 步骤替换。
   url "https://github.com/Francis-Xavier-code/gqy/releases/download/v0.1.0/gqy-v0.1.0-aarch64-apple-darwin.tar.gz"
-  sha256 "2acdba17c609b164e9b66997d99bab3cc5927f02a226c403358d89645aa54a7e"
+  sha256 "5fff74656817dcc84ff801161900a07456107e316819001ae2a831b816504012"
 
   # 长回复转图片的渲染字体(与旧 AUR 包装包一致,发布资产不含字体)。
   resource "noto-sans-cjk-sc" do
@@ -29,6 +29,9 @@ class Gqy < Formula
         (fonts_dir).install font
       end
     end
+    # 内置表情库(src/memes,随 release 资产打包)装到 share/gqy/memes,
+    # 运行时按可执行文件相对路径解析(<prefix>/share/gqy/memes)。
+    share.install "memes"
   end
 
   test do
